@@ -1,55 +1,49 @@
 extern crate ndarray;
 
 use ndarray::prelude::*;
-use ndarray::Array;
-use ndarray_rand::{RandomExt, F32};
-use ndarray_rand::rand_distr::Uniform;
 
+use crate::activation;
+use crate::layers;
+use crate::losses;
+use layers::Layer;
 
 pub struct NNet {
     input_size: u16,
     layers: Vec<Layer>,
-    deltas: Vec<f32>
+    loss_func: fn(Array1<f32>, Array1<f32>) -> f32
 }
 
 impl NNet {
     // Constructor
-    pub fn new(input_size: u16, topology: Array1<u16>) -> NNet {
+    pub fn new(input_size: u16, topology: Array1::<u16>) -> NNet {
         let mut layers: Vec<Layer> = vec![];
         for idx in 0..topology.len() {
             if idx == 0 {
-                layers.push(Layer::new(input_size, topology[idx]))
+                layers.push(Layer::new(input_size, topology[idx], activation::relu))
+            } else if idx == topology.len() - 1{
+                layers.push(Layer::new(topology[idx - 1], topology[idx], activation::sigmoid))
             } else {
-                layers.push(Layer::new(topology[idx - 1], topology[idx]))
+                layers.push(Layer::new(topology[idx - 1], topology[idx], activation::relu))
             }
         }
 
         NNet{
             input_size: input_size,
             layers: layers,
-            deltas: vec![0.]
+            loss_func: losses::rms
         }
     }
 
-    pub fn display(&self) -> String {
-        format!("{}", self.layers[0].weights)
-    }
-}
-
-
-pub struct Layer{
-    weights: Array2<f32>,
-    biases: Array1<f32>
-}
-
-impl Layer {
-    // Constructor
-    pub fn new(in_features: u16, out_features: u16) -> Layer {
-        let dist = Uniform::new(-1., 1.);
-        Layer {
-            weights: Array::random([in_features as usize, out_features as usize], F32(dist)),
-            biases: Array::random(out_features as usize, F32(dist))
+    pub fn forward(&self, input: Array1<f32>) -> Array1<f32> {
+        let mut output: Array1<f32> = input.to_owned();
+        for layer in &self.layers {
+            output = layer.forward(output);
         }
+        output
     }
-}
 
+    pub fn calc_error(&self, ground_truth: Array1<f32>) {
+        
+    }
+
+}
