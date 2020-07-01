@@ -10,7 +10,7 @@ fn main() {
     println!("Hello, world!");
     let input_size: u16 = 28 * 28;
     let nnet_topology: Array1<u16> = array![64, 64, 10];
-    let nnet: NNet = nnet::NNet::new(input_size, nnet_topology);
+    let mut nnet: NNet = nnet::NNet::new(input_size, nnet_topology);
 
     let mut testarr: Array1<f32> = Array::ones(28*28);
     testarr[1] = -5.;
