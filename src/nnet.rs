@@ -7,12 +7,11 @@ use crate::layers;
 use crate::losses;
 use layers::Layer;
 
-use crate::activation::{Derivable, Sigmoid, ReLU};
 
 pub struct NNet{
-    input_size: u16,
     layers: Vec<Layer>,
-    loss_func: fn(Array1<f32>, Array1<f32>) -> f32
+    loss_func: Box<dyn losses::DerivableLoss>,
+    l_rate: f32
 }
 
 impl NNet {
@@ -30,9 +29,9 @@ impl NNet {
         }
 
         NNet{
-            input_size: input_size,
             layers: layers,
-            loss_func: losses::rms
+            loss_func: Box::new(losses::RMS),
+            l_rate: 0.005
         }
     }
 
@@ -44,8 +43,20 @@ impl NNet {
         output
     }
 
-    pub fn calc_error(&self, ground_truth: Array1<f32>) {
-        
+    pub fn calc_error(&self, pred: &Array1<f32>, ground_truth: &Array1<f32>) -> Array2<f32> {
+        let loss = self.loss_func.backward(pred, ground_truth);
+        loss.insert_axis(Axis(1))
+    }
+
+    pub fn backward(&mut self, pred: &Array1<f32>, ground_truth: &Array1<f32>) {
+        let mut delta = self.calc_error(pred, ground_truth);
+        for layer_idx in (0..self.layers.len()).rev() {
+            let layer = &mut self.layers[layer_idx];
+            delta = layer.backward(&delta, &self.l_rate);
+            if layer_idx==self.layers.len() -1 {
+            }
+        }
+        println!("mse {:?}", self.loss_func.forward(pred, ground_truth));
     }
 
 }
