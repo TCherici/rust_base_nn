@@ -3,32 +3,35 @@ mod activation;
 mod layers;
 mod losses;
 
-use ndarray_rand::{RandomExt, F32};
-use ndarray_rand::rand_distr::Uniform;
+use ndarray::{array};
 use ndarray::prelude::*;
 use nnet::NNet;
+
+use rust_mnist::{print_sample_image, Mnist};
+
 
 fn main() {
     println!("Hello, world!");
     let input_size: u16 = 28 * 28;
-    let nnet_topology: Array1<u16> = array![32, 64, 10];
+    let nnet_topology: Array1<u16> = array![64, 64, 10];
     let mut nnet: NNet = nnet::NNet::new(input_size, nnet_topology);
-    let dist = Uniform::new(0., 1.);
-    // testarr[1] = -5.;
+   
+    let mnist = Mnist::new("/home/tcherici/Documents/mnist/");
 
-    let test1: Array2<f32> = Array::ones((64, 10));
-    let test2: Array2<f32> = Array::ones((10, 1));
-    println!("mmult: {:?}", (test1.dot(&test2)).dim());
+    // Print one image (the one at index 5) for verification.
+    print_sample_image(&mnist.train_data[5], mnist.train_labels[5]);
 
-    let mut gt : Array1<f32>  = Array::zeros(10);
-    gt[6] = 1.;
 
-    for _idx in 1..1600 {
-        let testarr: Array1<f32> = Array::random(28*28 as usize, F32(dist));
-        let output = nnet.forward(testarr.clone());
-        // println!("nnet forward: {}", output);
-        nnet.backward(&output, &gt)
+    for idx in 1..mnist.train_data.len() as u16 {
+        let input_u8 = &mnist.train_data[idx as usize];
+        let input_f32: Array1<f32> = input_u8.iter().map(|&x| {x as f32 / 255.}).collect();
+        let mut output_array: Array1<f32> = Array::zeros(10);
+        let output_val: &u8 = &mnist.train_labels[idx as usize];
+        output_array[*output_val as usize] = 1.;
+        let output = nnet.forward(input_f32.clone());
+        nnet.backward(&output, &output_array)
     }
-    let testarr: Array1<f32> = Array::random(28*28 as usize, F32(dist));
-    println!("nnet forward: {}", nnet.forward(testarr.clone()));
+    // let testarr: Array1<f32> = Array::random(28*28 as usize, F32(dist));
+    // let testarr: Array1<f32> = array!(&mnist.test_data[0].iter().map(|x| {*x as f32}).collect());
+    // println!("nnet forward: {}", nnet.forward(testarr));
 }

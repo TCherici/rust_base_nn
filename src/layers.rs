@@ -38,7 +38,7 @@ impl Layer {
 
     pub fn backward(&mut self, delta: &Array2<f32>, l_rate: &f32) -> Array2<f32> {
         // println!("delta: {:?} ~~ weights: {:?} ~~ biases: {}", delta.dim(), self.weights.dim(), self.biases.dim());
-        let newdelta = delta * &self.activation.backward(self.output.clone()).insert_axis(Axis(1));
+        let newdelta = delta * &self.activation.backward(self.output.clone());
         // println!("newdelta: {:?}", newdelta.mean());
         let weights_delta = self.input.clone().insert_axis(Axis(1)).dot(&newdelta.t());
         
