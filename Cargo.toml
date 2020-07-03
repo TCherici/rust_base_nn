@@ -11,3 +11,4 @@ ndarray = "0.13"
 ndarray-rand = "0.11"
 
 rust-mnist = "0.1"
+rand = "0.7"

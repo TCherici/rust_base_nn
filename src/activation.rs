@@ -45,7 +45,7 @@ impl DerivableLayer for SoftMax {
     fn backward(&self, arr: Array1<f32>) -> Array2<f32> {
         let s: Array1<f32> = self.forward(arr);
         let s_diag: Array2<f32> = Array2::from_diag(&s);
-        let s_matrix: Array2<f32> = s.clone().insert_axis(Axis(1)) * s.insert_axis(Axis(0));
+        let s_matrix: Array2<f32> = s.clone().insert_axis(Axis(1)).dot(&s.insert_axis(Axis(0)));
         s_diag - &s_matrix * &s_matrix.t()
     }
 
